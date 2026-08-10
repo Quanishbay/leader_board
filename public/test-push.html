@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Тест Push Уведомлений</title>
+</head>
+<body>
+<h2>Получение FCM Токена</h2>
+<button id="btn-token">Разрешить уведомления и получить токен</button>
+<pre id="token" style="word-wrap: break-word; white-space: pre-wrap; margin-top: 20px; font-weight: bold; color: green;"></pre>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB5TMgLCdZ2LNSCU0TrMQp4DLGa604TMJQ",
+        authDomain: "leaderboard-ed326.firebaseapp.com",
+        projectId: "leaderboard-ed326",
+        storageBucket: "leaderboard-ed326.firebasestorage.app",
+        messagingSenderId: "978551092470",
+        appId: "1:978551092470:web:b219b8e81f2b36a93ae8d7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    document.getElementById('btn-token').addEventListener('click', async () => {
+        try {
+            const permission = await Notification.requestPermission();
+
+            if (permission === 'granted') {
+                // Явная регистрация и ожидание готового Service Worker
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                await navigator.serviceWorker.ready;
+
+                const currentToken = await getToken(messaging, {
+                    vapidKey: 'BEREVYkaiGus0adXMqEHOhUGDRNdDGPYyfup9W-oVuiZ4v5qoWRBFiD7ayt3N8geHq6kn60wvM1Kwp5P0lQbiJk',
+                    serviceWorkerRegistration: registration
+                });
+
+                if (currentToken) {
+                    document.getElementById('token').innerText = currentToken;
+                    console.log('FCM Token:', currentToken);
+                } else {
+                    alert('Токен не был получен.');
+                }
+            } else {
+                alert('Разрешение на уведомления не получено. Статус: ' + permission);
+            }
+        } catch (error) {
+            console.error('Ошибка Firebase:', error);
+            alert('Произошла ошибка: ' + error.message);
+        }
+    });
+</script>
+</body>
+</html>
