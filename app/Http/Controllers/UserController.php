@@ -13,8 +13,7 @@ class UserController extends Controller
     public function __construct(
         private LeaderboardService $leaderboardService
     )
-    {
-    }
+    {}
 
     public function addScore(Request $request): JsonResponse
     {
@@ -41,14 +40,6 @@ class UserController extends Controller
 
     public function getLeaderboard(): JsonResponse
     {
-//        $user = User::find(1);
-//
-//        SendPushNotification::dispatch(
-//            $user->fcm_token,
-//            'Новое достижение!',
-//            'Вы поднялись на 1 место в рейтинге!',
-//            ['rank' => 1]
-//        );
         $top = $this->leaderboardService->getTop(10);
         return response()->json(['leaderboard' => $top]);
     }
