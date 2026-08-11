@@ -12,7 +12,9 @@ class UserController extends Controller
 {
     public function __construct(
         private LeaderboardService $leaderboardService
-    ) {}
+    )
+    {
+    }
 
     public function addScore(Request $request): JsonResponse
     {
@@ -39,7 +41,45 @@ class UserController extends Controller
 
     public function getLeaderboard(): JsonResponse
     {
-        $user = User::find(1);
+//        $user = User::find(1);
+//
+//        SendPushNotification::dispatch(
+//            $user->fcm_token,
+//            'Новое достижение!',
+//            'Вы поднялись на 1 место в рейтинге!',
+//            ['rank' => 1]
+//        );
+        $top = $this->leaderboardService->getTop(10);
+        return response()->json(['leaderboard' => $top]);
+    }
+
+    public function sendNotifications()
+    {
+        $user = User::all();
+
+        foreach ($user as $user) {
+            SendPushNotification::dispatch(
+                $user->fcm_token,
+                'Новое достижение!',
+                'Вы поднялись на 1 место в рейтинге!',
+                ['rank' => 1]
+            );
+        }
+
+        return 'success';
+    }
+
+    public function sendNotification(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+
+        if (!$user->fcm_token) {
+            return response()->json(['message' => 'У пользователя отсутствует FCM токен'], 400);
+        }
 
         SendPushNotification::dispatch(
             $user->fcm_token,
@@ -48,7 +88,6 @@ class UserController extends Controller
             ['rank' => 1]
         );
 
-        $top = $this->leaderboardService->getTop(10);
-        return response()->json(['leaderboard' => $top]);
+        return response()->json(['message' => 'Уведомление отправлено в очередь']);
     }
 }
